@@ -1,0 +1,25 @@
+#Script removes all local admin users, except for ones listed in line 9 (Administrator, Domain Admins and Xperteks-Admin)
+#Remaining admin users are written to UDF 14 (Admin users) for reporting purposes
+
+# Get all members of the local Administrators group
+$members = Get-LocalGroupMember -Group "Administrators"
+
+# Loop through each member and remove them if they are not the built-in Administrator or the Domain Admins group
+foreach ($member in $members) {
+    write-host "Processing user: " $member.Name
+    if ($member.Name -notlike "*Administrator" -and $member.Name -notlike "*Domain Admins" -and $member.Name -notlike "*Xperteks-Admin") {
+        Remove-LocalGroupMember -Group "Administrators" -Member $member.Name
+        Write-Host "Removed $($member.Name) from Administrators group."
+    }else{
+        write-host "User " $member.Name " is excluded from this script."
+    }     
+}
+
+$LocalAdmins = "Local admin(s): "
+
+# Get admin members post clean up
+$members = Get-LocalGroupMember -Group "Administrators"
+$varString = "Local admin(s): " + ($members -join ", ")
+
+#Write remaining admin users to UDF14
+New-ItemProperty -Path "HKLM:\Software\CentraStage" -Name "Custom14" -PropertyType String -Value "$varString" -force | out-null
