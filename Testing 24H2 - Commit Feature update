@@ -1,0 +1,18 @@
+function reboot ($isUpgrade) {
+    if ($isUpgrade) {
+        Write-Host "Finalizing OS Upgrade..."
+        $arguments = "/finalize", "/update"
+        & "C:\`$WINDOWS.~BT\Sources\SetupHost.exe" $arguments
+    } else {
+        Write-Host "Rebooting..."
+        shutdown /r /t 0 /f
+    }
+}
+
+if (Test-Path $($env:SystemDrive + '\$WINDOWS.~BT\Sources')) {
+    # $WINDOWS.~BT is only present when a OS Upgrade is staged. In order for the ugrade to apply on reboot this command needs to
+    # be executed which will finalize a bunch of settings then reboot the machine to apply the update.
+    reboot $true
+} else {
+    reboot $false
+}
