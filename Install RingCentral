@@ -1,0 +1,29 @@
+# Function to check if the script is running as an administrator
+function Test-Admin {
+    $currentUser = New-Object Security.Principal.WindowsPrincipal([Security.Principal.WindowsIdentity]::GetCurrent())
+    $currentUser.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
+}
+
+# Check if running as administrator
+if (-not (Test-Admin)) {
+    Write-Host "This script needs to be run as an administrator." -ForegroundColor Red
+    exit
+}
+
+# Define the URL and the destination path
+$url = "https://app.ringcentral.com/download/RingCentral-x64.msi"
+$destination = "$env:TEMP\RingCentral-x64.msi"
+
+# Download the file
+Write-Host "Downloading RingCentral MSI..." -ForegroundColor Green
+Invoke-WebRequest -Uri $url -OutFile $destination
+
+# Check if the file was downloaded
+if (Test-Path $destination) {
+    Write-Host "Download complete. Installing MSI..." -ForegroundColor Green
+    # Install the MSI
+    Start-Process msiexec.exe -ArgumentList "/i $destination /quiet /norestart" -Wait
+    Write-Host "Installation complete." -ForegroundColor Green
+} else {
+    Write-Host "Download failed." -ForegroundColor Red
+}
