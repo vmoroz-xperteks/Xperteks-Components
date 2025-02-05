@@ -1,0 +1,21 @@
+[System.Reflection.Assembly]::LoadWithPartialName('Microsoft.VisualBasic') | Out-Null
+Do {
+$pfpath = [Microsoft.VisualBasic.Interaction]::InputBox("Enter the path to create public folders", "Path", "$env:pfpath")
+if ($pfpath -eq "") {exit}
+$testpath = get-publicfolder -identity $pfpath }
+while (($testpath | measure).count -eq 0)
+$beginnum = [Microsoft.VisualBasic.Interaction]::InputBox("Enter the beginning number", "BeginNum", "$env:beginnum")
+if ($beginnum -eq "") {exit}
+Do {
+$endnum = [Microsoft.VisualBasic.Interaction]::InputBox("Enter the ending number", "EndNum", "$env:endnum")
+if ($endnum -eq "") {exit}
+if ($endnum -lt $beginnum) {write-host "ERROR: ENDING NUMBER LESS THAN BEGINNING NUMBER! TRY AGAIN."}
+} while ($endnum -lt $beginnum)
+$beginnum..$endnum | %{New-PublicFolder -Name ("A" + $_.toString()) -path $pfpath}
+# $namep contains new folder name, correct or remove prefix as needed
+$beginnum..$endnum | %{$namep = "A" + $_.toString()
+Enable-MailPublicFolder -Identity $pfpath\$namep -HiddenFromAddressListsEnabled $True
+# $newemail variable contains new primary SMTP address for the public folder. If you need to add a prefix use $newemail = "prefix" + $_.toString() + "@fortintl.com"
+$newemail = "A" + $_.toString() + "@ambassadorl.com"
+Set-MailPublicFolder -Identity $pfpath\$namep -EmailAddressPolicyEnabled $false -EmailAddresses $newemail
+write-host "Mail-enabling folder "$_}
