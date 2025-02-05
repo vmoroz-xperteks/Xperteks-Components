@@ -1,0 +1,12 @@
+# Get the serial number from WMI
+$serial = Get-WmiObject -Class Win32_BIOS | Select-Object -ExpandProperty SerialNumber
+$prefix = $ENV:usrSitePrefix
+
+# Construct the new hostname
+$RAWHostname = -join("$prefix", "$serial")
+$length = $RAWHostname.Length
+$newHostname = $RAWHostname.Substring(0, [Math]::Min(15, $length))
+
+write-host "Changing computer name to " $newHostname ". Please reboot to complete the change"
+# Change the hostname
+Rename-Computer -NewName "$newHostname"
