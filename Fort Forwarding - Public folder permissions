@@ -1,0 +1,20 @@
+[System.Reflection.Assembly]::LoadWithPartialName('Microsoft.VisualBasic') | Out-Null
+Do {
+$pfpath = [Microsoft.VisualBasic.Interaction]::InputBox("Enter the path to create public folders", "Path", "$env:pfpath")
+if ($pfpath -eq "") {exit}
+$testpath = get-publicfolder -identity $pfpath }
+while (($testpath | measure).count -eq 0)
+$beginnum = [Microsoft.VisualBasic.Interaction]::InputBox("Enter the beginning number", "BeginNum", "$env:beginnum")
+if ($beginnum -eq "") {exit}
+Do {
+$endnum = [Microsoft.VisualBasic.Interaction]::InputBox("Enter the ending number", "EndNum", "$env:endnum")
+if ($endnum -eq "") {exit}
+if ($endnum -lt $beginnum) {write-host "ERROR: ENDING NUMBER LESS THAN BEGINNING NUMBER! TRY AGAIN."}
+} while ($endnum -lt $beginnum)
+
+$beginnum..$endnum | %{$namep = $_.toString()
+Add-PublicFolderClientPermission -Identity $pfpath\$namep -User Anonymous -AccessRights CreateItems
+
+$newemail = $_.toString() + "@fortintl.com"
+
+write-host "Corrected permissions on folder "$_}
