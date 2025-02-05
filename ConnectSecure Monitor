@@ -1,0 +1,126 @@
+# Requires site or global varialbe in DRMM for the desired application version - DesiredVersion
+
+
+#You must define ALL application variable. 
+#   Application_Name must be an exact match. 
+#   Registry_Location is the exact registry location of the uninstall values
+#This script looks for two differnet processes and services. Adjust script to your needs
+
+$Aplication_Name = "ConnectSecure Vulnerability Scan Agent"
+$Registry_Location = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\ConnectSecure Agent"
+$serviceName = "CyberCNSAgent"
+$serviceName2 = "CyberCNSAgentMonitor"
+$ProcessName = "cybercnsagent"
+$ProcessName2 = "cybercnsagentmonitor"
+
+$OSVersion = (get-itemproperty -Path "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion" -Name ProductName).ProductName
+
+#This function will check if the application is installed by verifying that the registry location exists.
+function Application-Installed {
+    IF ([System.Environment]::Is64BitOperatingSystem) {
+        $Global:installed = (get-itemproperty -path "$Registry_Location").displayname -contains "$Aplication_Name"
+    }ELSE {
+        $Global:installed = (get-itemproperty -path "$Registry_Location").displayname -contains "$Aplication_Name"
+    }
+}
+
+#This function checks the registry location for the application version. If version is not found, it will set the DRMM Alert. 
+#DRMM Status is set approriately tio handle if version is above or below the desired version, which is set in site or global variables.
+Function Application-Version {
+    IF ([System.Environment]::Is64BitOperatingSystem) {
+        $Application_Registries = (get-itemproperty -path "$Registry_Location") | Where-Object {$_.DisplayName -ccontains "$Aplication_Name"}
+    }ELSE {
+        $Application_Registries = (get-itemproperty -path "$Registry_Location") | Where-Object {$_.DisplayName -ccontains "$Aplication_Name"}
+    }
+    IF ($Application_Registries -eq $null) {
+        DRMMAlert "Process_Status is installed but version was not found."
+    }
+
+    $version = $Application_Registries[0].DisplayVersion
+    IF ([System.Version]$version -ge [System.Version]$ENV:DesiredVersion) {
+        DRMMStatus "Endpoint is protected by $Aplication_Name V$version"
+    } Else {
+        DRMMStatus "The endpoint doesn't have the latest Process_Status version. Version installed is: V$version"
+    }
+}
+
+#This function checks the service status and restarts the service if needed. 
+Function Service-Status {
+    # Check if the service exists and restart
+	if (Get-Service -Name $serviceName -ErrorAction SilentlyContinue) {
+		Write-Host "Service '$serviceName' exists. Restarting..."
+		Restart-Service -Name $serviceName
+		Write-Host "Service '$serviceName' restarted successfully."
+	} else {
+		Write-Host "Service '$serviceName' does not exist."
+	}
+	if (Get-Service -Name $serviceName2 -ErrorAction SilentlyContinue) {
+		Write-Host "Service '$serviceName2' exists. Restarting..."
+		Restart-Service -Name $serviceName2
+		Write-Host "Service '$serviceName2' restarted successfully."
+	} else {
+		Write-Host "Service '$serviceName2' does not exist."
+	}
+}
+
+#This function checks the status of the application processes.
+Function Process-Status{
+    $Process_Status = Get-Process -Name "$ProcessName" -ErrorAction SilentlyContinue
+    $Process_Status2 = Get-Process -Name "$ProcessName2" -ErrorAction SilentlyContinue
+    $Global:running = ($Process_Status -ne $null) -and ($Process_Status2 -ne $null)
+}
+
+function DRMMAlert {
+    param([string]$alert)
+    Write-Host "<-Start Result->"
+    Write-Host "Status="$alert
+    Write-Host "<-End Result->"
+    exit 1
+}
+
+function DRMMStatus {
+    param([string]$status)
+    Write-Host "<-Start Result->"
+    Write-Host "Status="$status
+    Write-Host "<-End Result->"
+    exit 0
+}
+
+#Older operating systems do not have necessary registry values to get version and install status. We only check to ensure the processes are running.
+If($OSVersion -eq "Windows 7 Professional" -or $OSVersion -eq "Windows Server 2008 R2 Standard" -or $OSVersion -eq "Windows Server 2008 R2 Enterprise")
+{
+	Process-Status
+	if (!$running) {
+		Service-Status
+        Start-Sleep -Seconds 10
+        Process-Status
+        if (!$running) {
+            DRMMAlert "$Aplication_Name is not running"
+            exit 1
+        }
+	}
+    DRMMStatus "Endpoint is protected by $Aplication_Name"
+    exit 0
+}
+
+#Check if application is installed
+Application-Installed
+if (!$installed) {
+	DRMMAlert "$Aplication_Name is not installed ***"
+    exit 1
+}
+
+#Check if processes are running
+Process-Status
+if (!$running) {
+	Service-Status
+    Start-Sleep -Seconds 10
+    Process-Status
+    if (!$running) {
+        DRMMAlert "$Aplication_Name is not running"
+        exit 1
+    } 
+}
+#Check for application version
+Application-Version
+
