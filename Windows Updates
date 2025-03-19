@@ -132,7 +132,7 @@ function Schedule-WindowsUpdate {
     write-output "Setting time for $hour hours and $minute minutes."
 
     #adding an update to the scheduled task for 2 minutes from now.
-    Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -IgnoreReboot -ScheduleJob (Get-Date -Hour $hour -Minute $minute -Second 0) -Verbose
+    Install-WindowsUpdate -MicrosoftUpdate -AcceptAll -IgnoreReboot -UpdateType Software -ScheduleJob (Get-Date -Hour $hour -Minute $minute -Second 0) -Verbose
 }
 
 function Display-RebootMessage {
