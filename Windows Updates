@@ -4,21 +4,22 @@
 #    - If reboot require and active user, pop up an Xperteks branded message asking to reboot
 # 2. Check if computer is fully updated, based on the OS release version defined in variables
 #    - If computer is fully updated, exit script
-#    - If computer is not updated, schedule an update 2 minutes from current time
+#    - If computer is not updated, schedule an update 5 minutes from current time
 #
 
 #Variables
 $usrShowRestart = $true
 $usrMessageContent = "Xperteks support has installed important updates  on your computer. Please reboot your computer to allow the installation to complete."
 $usrMessageTitle = "Your computer requires a reboot."
-$24H2Release = 2314
-$23H2Release = 4460
-$Win10Release = 5131
+$24H2Release = 3323
+$23H2Release = 4974
+$Win10Release = 5555
 
 #Check for Windows Update Module and install if not present.
 if(-not (Get-Module PSWindowsUpdate -ListAvailable)){
     Install-Module PSWindowsUpdate -Force
 }
+Update-Module -Name PSWindowsUpdate -Force -Confirm:$false > $null
 Import-Module -Name PSWindowsUpdate -Force
 
 function getProxyData {
@@ -117,16 +118,16 @@ function Schedule-WindowsUpdate {
     [int]$hour=(get-date -format HH)
     [int]$minute=(get-date -format mm)
 
-    if ($minute -eq 58){
+    if ($minute -eq 55){
         $hour=$hour+1
         $minute=0
     }
-    elseif ($minute -eq 59){
+    elseif ($minute -ge 56){
         $hour=$hour+1
-        $minute=01
+        $minute=02
     }
     else {    
-        $minute=$minute+2
+        $minute=$minute+5
     }
     write-output "Setting time for $hour hours and $minute minutes."
 
@@ -275,7 +276,20 @@ Next
     }
 
 }
-
+Function Check_Toast_Required_Files {
+    $folderPath = "$env:ProgramData\CentraStage\temp\"
+    if (-Not (Test-Path -Path $folderPath -PathType Container)) {
+        New-Item -Path "$env:ProgramData\CentraStage\" -Name "temp" -ItemType "directory"
+    }
+    $filePath = "$env:ProgramData\CentraStage\temp\toastMessage.ps1"
+    if (-Not (Test-Path -Path $filePath -PathType Leaf)) {
+       Copy-Item "toastMessage.ps1" -Destination "$folderPath"
+    }
+    $filePath2 = "$env:ProgramData\CentraStage\temp\PSRun.vbs"
+    if (-Not (Test-Path -Path $filePath2 -PathType Leaf)) {
+	    Copy-Item "PSRun.vbs" -Destination "$folderPath"
+    }
+}
 Function Check-If-Fully-Updated {
     #Check for for Windows OS version. 
     $isWin11=(Get-WmiObject Win32_OperatingSystem).Caption -Match "Windows 11"
@@ -323,6 +337,7 @@ Function Check-If-Fully-Updated {
 # Main script logic
 
 
+Check_Toast_Required_Files
 
 if (Test-PendingReboot) {
     if (-not (Test-UserLoggedIn)) {
