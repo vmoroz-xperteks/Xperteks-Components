@@ -326,11 +326,13 @@ Function Check-If-Fully-Updated {
     if ($isWin11) {
         if (($OSBuild -ge $23H2Release) -and ($OSMajorVersion -ge 22631)){
         	#Windows 11 23H2
+            New-ItemProperty -Path "HKLM:\SOFTWARE\CentraStage" -Name Custom4 -Value "Fully Updated" -Force | Out-Null
             write-output "Computer has latest updates. No further action required."
             break script
         }
         elseif (($OSBuild -ge $24H2Release) -and ($OSMajorVersion -ge 26100)){
 	        #Windows 11 24H2
+            New-ItemProperty -Path "HKLM:\SOFTWARE\CentraStage" -Name Custom4 -Value "Fully Updated" -Force | Out-Null
             write-output "Computer has latest updates. No further action required."
             break script
         }
@@ -339,6 +341,7 @@ Function Check-If-Fully-Updated {
     elseif ($isWin10) {
         if (($OSBuild -ge $Win10Release) -and ($OSMajorVersion -ge 19045)){
             #Windows 10 22H2
+            New-ItemProperty -Path "HKLM:\SOFTWARE\CentraStage" -Name Custom4 -Value "Fully Updated" -Force | Out-Null
             write-output "Computer has latest updates. No further action required."
             break script
         }
@@ -347,6 +350,7 @@ Function Check-If-Fully-Updated {
         throw "Unsupported OS Version. Script only runs on Windows 11 and Windows 10."
         break script
     }
+    New-ItemProperty -Path "HKLM:\SOFTWARE\CentraStage" -Name Custom4 -Value "Missing Updates" -Force | Out-Null
 }
 
 
@@ -357,6 +361,7 @@ Function Check-If-Fully-Updated {
 Check_Toast_Required_Files
 
 if (Test-PendingReboot) {
+    New-ItemProperty -Path "HKLM:\SOFTWARE\CentraStage" -Name Custom4 -Value "Pending Reboot" -Force | Out-Null
     if (-not (Test-UserLoggedIn)) {
         Restart-Computer -Force
     } else {
