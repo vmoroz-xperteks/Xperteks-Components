@@ -11,9 +11,9 @@
 $usrShowRestart = $true
 $usrMessageContent = "Xperteks support has installed important updates  on your computer. Please reboot your computer to allow the installation to complete."
 $usrMessageTitle = "Your computer requires a reboot."
-$24H2Release = 3323
-$23H2Release = 4974
-$Win10Release = 5555
+$24H2Release = 3476
+$23H2Release = 5039
+$Win10Release = 5608
 
 #Check for Windows Update Module and install if not present.
 if(-not (Get-Module PSWindowsUpdate -ListAvailable)){
