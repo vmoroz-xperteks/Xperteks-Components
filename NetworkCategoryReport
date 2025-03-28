@@ -1,0 +1,15 @@
+$NetworkName = "ht.local"
+$networkProfiles = Get-NetConnectionProfile
+$targetNetwork = $networkProfiles | Where-Object { $_.Name -eq $NetworkName }
+if ($targetNetwork) {
+    Write-Output "Connected to $NetworkName. Current Network Category: $($targetNetwork.NetworkCategory)"
+        if ($targetNetwork.NetworkCategory -eq "Public") {
+        New-ItemProperty -Path "HKLM:\SOFTWARE\CentraStage" -Name Custom29 -Value "Public" -Force | Out-Null
+        Write-Output "Network Category changed from 'Public' to 'Private'."
+    } else {
+        New-ItemProperty -Path "HKLM:\SOFTWARE\CentraStage" -Name Custom29 -Value "Private" -Force | Out-Null
+        Write-Output "Network Category is already 'Private'. No changes made."
+    }
+} else {
+    Write-Output "Network profile $NetworkName not found. Please check the connection."
+} 
