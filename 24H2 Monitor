@@ -1,0 +1,39 @@
+# DRMM Monitoring script.
+# Check for Windows Updates and filter for the 24H2 update
+# Alert when 24H2 update is pending. 
+
+$UpdateSession = New-Object -ComObject Microsoft.Update.Session
+$UpdateSearcher = $UpdateSession.CreateUpdateSearcher()
+$SearchResult = $UpdateSearcher.Search("IsInstalled=0")
+
+# Initialize flag for the 24H2 update
+$UpdateFound = $false
+
+function 24H2-Alert{
+    param([string]$alert)
+    Write-Host "<-Start Result->"
+    Write-Host "24H2 Status="$alert
+    Write-Host "<-End Result->"
+    exit 1
+}
+
+function CynetStatus{
+    param([string]$status)
+    Write-Host "<-Start Result->"
+    Write-Host "24H2 Status="$status
+    Write-Host "<-End Result->"
+    exit 0
+}
+
+# Loop through the updates
+foreach ($Update in $SearchResult.Updates) {
+    if ($Update.Title -match "24H2") {
+        24H2-Alert "The 24H2 update is pending installation."
+        $UpdateFound = $true
+    }
+}
+
+# Notify if 24H2 is not found
+if (-not $UpdateFound) {
+    CynetStatus "The 24H2 update is not pending or available."
+}
